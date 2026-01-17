@@ -1,42 +1,29 @@
 const canvas = document.getElementById("visualizer");
 const ctx = canvas.getContext("2d");
 
-function resize() {
+function resizeCanvas() {
   canvas.width = canvas.offsetWidth;
   canvas.height = canvas.offsetHeight;
 }
-window.addEventListener("resize", resize);
-resize();
 
-const audioCtx = new AudioContext();
-const analyser = audioCtx.createAnalyser();
-analyser.fftSize = 256;
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
 
-const data = new Uint8Array(analyser.frequencyBinCount);
-
-fetch("../assets/songs/wav/sample.wav")
-  .then(r => r.arrayBuffer())
-  .then(b => audioCtx.decodeAudioData(b))
-  .then(buf => {
-    const src = audioCtx.createBufferSource();
-    src.buffer = buf;
-    src.connect(analyser);
-    analyser.connect(audioCtx.destination);
-    src.start();
-    draw();
-  });
+// Simple animated bars
+let t = 0;
 
 function draw() {
   requestAnimationFrame(draw);
-  analyser.getByteFrequencyData(data);
-
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const barW = canvas.width / data.length;
 
-  data.forEach((v, i) => {
-    ctx.fillStyle = `hsl(${i * 4},100%,50%)`;
-    ctx.fillRect(i * barW, canvas.height, barW - 1, -v * 1.5);
-  });
+  for (let i = 0; i < 50; i++) {
+    const x = (i / 50) * canvas.width;
+    const h = Math.sin(t + i * 0.5) * 100 + 150;
+    ctx.fillStyle = `hsl(${i * 7}, 100%, 50%)`;
+    ctx.fillRect(x, canvas.height - h, 10, h);
+  }
+
+  t += 0.05;
 }
 
-document.body.addEventListener("click", () => audioCtx.resume(), { once: true });
+draw();
